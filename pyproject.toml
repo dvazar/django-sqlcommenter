@@ -1,0 +1,96 @@
+[project]
+name = "django-sqlcommenter"
+version = "0.1.0"
+description = "Annotate every Django SQL query with the code and request that issued it"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Dmitrii Azarenko" }]
+requires-python = ">=3.10"
+dependencies = ["asgiref>=3.8", "django>=5.2"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Database",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/dvazar/django-sqlcommenter"
+Repository = "https://github.com/dvazar/django-sqlcommenter"
+Issues = "https://github.com/dvazar/django-sqlcommenter/issues"
+Changelog = "https://github.com/dvazar/django-sqlcommenter/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2",
+    "mypy>=1.15",
+    "pre-commit>=4",
+    "pytest>=8",
+    "pytest-asyncio>=0.25",
+    "pytest-django>=4.12",
+    "ruff>=0.15",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+# CLAUDE.md is repository instructions, not package content.
+exclude = ["CLAUDE.md"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/django_sqlcommenter"]
+artifacts = ["src/django_sqlcommenter/py.typed"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+asyncio_mode = "auto"
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# Nested `with` in the scope tests is the behavior under test: flattening
+# it into one statement would hide the nesting it exists to demonstrate.
+"tests/test_scope.py" = ["SIM117"]
+
+[tool.ruff.lint.isort]
+# Django gets its own section, the way Django's own codebase orders
+# imports. Without this, ruff folds it into third-party and every module
+# here fails I001.
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "django",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+django = ["django"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"

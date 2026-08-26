@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Django 5.2 supports Python 3.10-3.13; 6.0 and 6.1 support
+        # 3.12-3.14. 5.2 and 6.1 are pinned at both ends of their own
+        # Python ranges, and every supported Python appears at least
+        # once. 6.0 is covered only at its floor: 3.14 x 6.1 already
+        # exercises the upper end of the same interpreter range.
+        include:
+          - python: "3.10"
+            django: "5.2"
+          - python: "3.11"
+            django: "5.2"
+          - python: "3.13"
+            django: "5.2"
+          - python: "3.12"
+            django: "6.0"
+          - python: "3.12"
+            django: "6.1"
+          - python: "3.14"
+            django: "6.1"
+    env:
+      # uv reads this and provisions the interpreter itself. Without it
+      # the matrix's python axis is inert: every job would run on
+      # whatever interpreter happens to satisfy requires-python.
+      UV_PYTHON: ${{ matrix.python }}
+    steps:
+      - uses: actions/checkout@v7
+      # setup-uv publishes no floating v10 tag, so this is pinned exactly.
+      - uses: astral-sh/setup-uv@v10.0.1
+      - name: Install
+        run: |
+          uv sync --all-groups
+          uv pip install "django~=${{ matrix.django }}.0"
+      - name: Lint
+        run: |
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ruff check .
+      - name: Types
+        run: uv run --no-sync mypy src
+      - name: Test
+        run: uv run --no-sync pytest -v
