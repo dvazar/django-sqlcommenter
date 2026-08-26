@@ -39,8 +39,10 @@ def test_public_api_is_importable_from_the_package_root() -> None:
     for name in (
         "SqlCommentMiddleware",
         "SqlScope",
+        "build_comment",
         "current_scope",
         "install",
+        "serialize_tags",
         "sql_scope",
         "sql_tags",
     ):

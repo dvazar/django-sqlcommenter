@@ -13,7 +13,10 @@ from django.http import (
 )
 from django.test import RequestFactory
 
-from django_sqlcommenter.middleware import SqlCommentMiddleware
+from django_sqlcommenter.middleware import (
+    SqlCommentMiddleware,
+    _rescope_streaming,
+)
 from django_sqlcommenter.scope import (
     SqlScope,
     current_scope,
@@ -268,6 +271,38 @@ async def test_async_scope_is_not_visible_between_chunks() -> None:
     iterator = response.streaming_content.__aiter__()
     await iterator.__anext__()
     assert current_scope() is None
+
+
+def test_a_streaming_response_with_no_scope_is_left_alone() -> None:
+    # Nothing to re-enter. Wrapping it anyway would cost the response
+    # its iterator to carry a scope that does not exist.
+    #
+    # ``_iterator`` rather than the ``streaming_content`` property: the
+    # property builds a fresh map object on every access, so identity
+    # can only be checked against what it wraps.
+    response = StreamingHttpResponse(iter([b"a", b"b"]))
+    before = response._iterator
+    _rescope_streaming(response)
+    assert response._iterator is before
+    assert current_scope() is None
+
+
+def test_process_view_keeps_the_raw_path_when_the_match_is_empty() -> None:
+    # Both tags are conditional, and the false side of each is what
+    # stops an empty match from replacing a good raw-path tag with
+    # nothing at all.
+    request = RequestFactory().get("/p/")
+    middleware = SqlCommentMiddleware(lambda r: None)
+    token = middleware.open_scope(request)
+    try:
+        request.resolver_match = SimpleNamespace(route="", view_name="")
+        middleware.process_view(request, lambda r: None, (), {})
+        scope = current_scope()
+        assert scope is not None
+        assert scope.tags["route"] == "/p/"
+        assert "controller" not in scope.tags
+    finally:
+        reset_scope(token)
 
 
 def test_a_file_response_keeps_its_zero_copy_path(tmp_path) -> None:

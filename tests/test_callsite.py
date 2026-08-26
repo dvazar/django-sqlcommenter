@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from typing import Any
 
 from django.conf import settings
@@ -84,6 +85,28 @@ def test_a_project_frame_below_foreign_ones_is_still_found() -> None:
 
 def test_gives_up_when_no_project_frame_is_within_reach() -> None:
     assert _through_foreign_frames(conf.MAX_DEPTH + 5) is None
+
+
+def test_the_walk_stops_when_the_stack_runs_out() -> None:
+    """The other way to give up: no frames left, budget unspent.
+
+    A thread's stack is four frames deep at the bottom, so the walk
+    reaches ``None`` long before ``MAX_DEPTH``. Every other test here
+    exercises the depth limit instead, and the two exits are separate
+    lines of code.
+    """
+    seen: list[str | None] = []
+
+    def probe() -> None:
+        seen.append(resolve_callsite())
+
+    # A root nothing is under, so no frame on that short stack is ours.
+    with override_settings(SQLCOMMENT_PROJECT_ROOT="/nowhere-at-all"):
+        callsite_module.clear_cache()
+        thread = threading.Thread(target=probe)
+        thread.start()
+        thread.join()
+    assert seen == [None]
 
 
 def test_project_root_setting_overrides_base_dir() -> None:

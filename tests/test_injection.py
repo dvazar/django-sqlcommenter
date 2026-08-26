@@ -37,6 +37,7 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Mapping
+from contextlib import closing
 from types import SimpleNamespace
 from urllib.parse import quote
 
@@ -221,15 +222,15 @@ def test_the_encoding_is_what_stands_between_a_payload_and_a_table():
     """
     payload = PAYLOADS["close-comment"]
 
-    naive = sqlite3.connect(":memory:")
-    naive.execute("CREATE TABLE django_content_type (a int)")
-    naive.execute(f"/*route='{payload}'*/ SELECT 1")
-    assert not _table_exists(naive), "the payload is supposed to be dangerous"
+    with closing(sqlite3.connect(":memory:")) as naive:
+        naive.execute("CREATE TABLE django_content_type (a int)")
+        naive.execute(f"/*route='{payload}'*/ SELECT 1")
+        assert not _table_exists(naive), "the payload must be dangerous"
 
-    guarded = sqlite3.connect(":memory:")
-    guarded.execute("CREATE TABLE django_content_type (a int)")
-    guarded.execute(f"{build_comment({'route': payload})} SELECT 1")
-    assert _table_exists(guarded)
+    with closing(sqlite3.connect(":memory:")) as guarded:
+        guarded.execute("CREATE TABLE django_content_type (a int)")
+        guarded.execute(f"{build_comment({'route': payload})} SELECT 1")
+        assert _table_exists(guarded)
 
 
 def _table_exists(con: sqlite3.Connection) -> bool:

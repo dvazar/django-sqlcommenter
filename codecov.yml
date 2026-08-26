@@ -1,0 +1,23 @@
+# Codecov configuration.
+#
+# Coverage is INFORMATIONAL: it updates the badge and posts a PR summary,
+# but it never fails a check. The gate that actually blocks a merge is
+# ruff + mypy + the six-cell test matrix in .github/workflows/ci.yml,
+# together with fail_under = 100 in pyproject.toml — which fails the
+# test job itself, before Codecov ever sees the report.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+# Only the package drives the badge; the suite is not product code.
+ignore:
+  - "tests/"
+
+comment:
+  layout: "reach, diff, files"
+  require_changes: true # only comment when a PR actually moves coverage
