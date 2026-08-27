@@ -1,5 +1,12 @@
 # django-sqlcommenter
 
+[![CI](https://github.com/dvazar/django-sqlcommenter/actions/workflows/ci.yml/badge.svg)](https://github.com/dvazar/django-sqlcommenter/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/dvazar/django-sqlcommenter/graph/badge.svg)](https://codecov.io/gh/dvazar/django-sqlcommenter)
+[![PyPI](https://img.shields.io/pypi/v/django-sqlcommenter.svg)](https://pypi.org/project/django-sqlcommenter/)
+[![Python versions](https://img.shields.io/pypi/pyversions/django-sqlcommenter.svg)](https://pypi.org/project/django-sqlcommenter/)
+[![Django versions](https://img.shields.io/pypi/frameworkversions/django/django-sqlcommenter.svg?label=django)](https://pypi.org/project/django-sqlcommenter/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 Annotate every Django SQL query with the code and request that issued it.
 
 ## What it does
